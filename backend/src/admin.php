@@ -182,7 +182,12 @@ route('PUT', '/packages/{id}', 'admin', function (array $p) {
     $b = body();
     $price = in_money($b, 'price', 'Price');
     $slots = in_int($b, 'slots', 0, 10000, 'Slots');
-    q('UPDATE packages SET price = ?, slots = ? WHERE id = ?', [$price, $slots, $row['id']]);
+    // Optional: a new departure date (this is how a departed package is reopened).
+    $date = (($b['date'] ?? '') === '') ? null : in_date($b, 'date', 'Departure date');
+    q(
+        'UPDATE packages SET price = ?, slots = ?, departure_date = COALESCE(?, departure_date) WHERE id = ?',
+        [$price, $slots, $date, $row['id']]
+    );
     log_activity($admin['id'], 'Package ' . $row['name'] . ' updated');
     return ['ok' => true];
 });

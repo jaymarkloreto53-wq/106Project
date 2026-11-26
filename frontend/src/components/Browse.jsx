@@ -6,12 +6,15 @@ export default function Browse() {
   const { db, dest, filters: f, setFilters, pick } = useApp();
 
   const budget = +f.budget || 0;
-  const list = db.pkgs.filter(
-    (p) =>
-      (!f.date || p.date >= f.date) &&
-      (!budget || p.price <= budget) &&
-      (!f.type || dest(p.d).type === f.type),
-  );
+  const list = db.pkgs
+    .filter(
+      (p) =>
+        (!f.date || p.date >= f.date) &&
+        (!budget || p.price <= budget) &&
+        (!f.type || dest(p.d).type === f.type),
+    )
+    // Trips you can still book first, departed ones last.
+    .sort((a, b) => Number(a.departed) - Number(b.departed));
   const types = [...new Set(db.dests.map((d) => d.type))];
   const set = (key) => (e) => setFilters({ ...f, [key]: e.target.value });
 
@@ -42,19 +45,20 @@ export default function Browse() {
           {list.map((p) => {
             const d = dest(p.d);
             return (
-              <div className="card" key={p.id}>
+              <div className={`card${p.departed ? " past" : ""}`} key={p.id}>
                 <Pic d={d} />
                 <h3>{d.name}</h3>
-                <span className="tag">{d.type}</span>
+                <span className="tag">{d.type}</span>{" "}
+                {p.departed && <span className="tag cancelled">Departed</span>}
                 <p>{d.desc}</p>
                 <p>
-                  {p.days} days · departs {p.date}
+                  {p.days} days · {p.departed ? "departed" : "departs"} {p.date}
                   <br />
                   <span className="price">from {money(p.price)}</span>{" "}
-                  <small>per traveler · {p.slots} slots</small>
+                  <small>per traveler{p.departed ? "" : ` · ${p.slots} slots`}</small>
                 </p>
-                <button className="btn" onClick={() => pick(p.id)}>
-                  Book a trip
+                <button className="btn" disabled={p.departed} onClick={() => pick(p.id)}>
+                  {p.departed ? "No longer available" : "Book a trip"}
                 </button>
               </div>
             );

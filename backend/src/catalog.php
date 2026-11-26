@@ -4,7 +4,7 @@ declare(strict_types=1);
 // Public catalogue: every destination and its package.
 route('GET', '/catalog', 'public', function () {
     $destinations = q('SELECT id, name, type, description, image, art, latitude, longitude FROM destinations ORDER BY id')->fetchAll();
-    $packages = q('SELECT id, destination_id, days, price, slots, departure_date FROM packages ORDER BY id')->fetchAll();
+    $packages = q('SELECT id, destination_id, days, price, slots, departure_date, (departure_date < CURDATE()) AS departed FROM packages ORDER BY id')->fetchAll();
 
     return [
         'destinations' => array_map(fn ($d) => [
@@ -24,6 +24,7 @@ route('GET', '/catalog', 'public', function () {
             'price'         => (float) $p['price'],
             'slots'         => (int) $p['slots'],
             'departureDate' => $p['departure_date'],
+            'departed'      => (bool) $p['departed'],
         ], $packages),
     ];
 });

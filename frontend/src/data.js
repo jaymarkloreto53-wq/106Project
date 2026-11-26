@@ -26,6 +26,7 @@ export const normalizeCatalog = (c) => ({
     price: p.price,
     slots: p.slots,
     date: p.departureDate,
+    departed: p.departed,
   })),
 });
 

@@ -6,6 +6,7 @@ const LIVE_STATUSES   = ['pending approval', 'approved'];
 
 const BOOKING_SQL = 'SELECT b.ref, b.package_id, d.name AS destination, p.departure_date, p.days,
         b.travelers, b.lead_name, b.phone, b.total, b.payment_method, b.status, b.created_at,
+        (p.departure_date < CURDATE()) AS departed,
         u.username, r.stars AS review_stars, r.comment AS review_text
     FROM bookings b
     JOIN packages p ON p.id = b.package_id
@@ -20,6 +21,7 @@ function booking_out(array $r): array
         'packageId'     => (int) $r['package_id'],
         'destination'   => $r['destination'],
         'departureDate' => $r['departure_date'],
+        'departed'      => (bool) $r['departed'],
         'days'          => (int) $r['days'],
         'travelers'     => (int) $r['travelers'],
         'leadName'      => $r['lead_name'],
@@ -194,6 +196,9 @@ route('POST', '/bookings/{ref}/cancel', 'user', function (array $p) {
         $b = lock_own_booking($ref, $u['id']);
         if (!in_array($b['status'], LIVE_STATUSES, true)) {
             fail(409, 'This booking is already ' . $b['status'] . '.');
+        }
+        if ((int) $b['departed'] === 1) {
+            fail(409, 'This trip has already departed, so it can no longer be cancelled.');
         }
         q('UPDATE packages SET slots = slots + ? WHERE id = ?', [$b['travelers'], $b['package_id']]);
         q('UPDATE bookings SET status = \'cancelled\' WHERE id = ?', [$b['id']]);
