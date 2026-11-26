@@ -145,10 +145,11 @@ function PkgRow({ p }) {
   const { dest, run, busy, refreshCatalog } = useApp();
   const [price, setPrice] = useState(String(p.price));
   const [slots, setSlots] = useState(String(p.slots));
+  const [date, setDate] = useState(p.date);
 
   const update = async () => {
     const ok = await run(
-      () => api.put(`packages/${p.id}`, { price: Number(price), slots: Number(slots) }),
+      () => api.put(`packages/${p.id}`, { price: Number(price), slots: Number(slots), date }),
       "Package updated",
     );
     if (ok) refreshCatalog();
@@ -157,8 +158,10 @@ function PkgRow({ p }) {
   return (
     <div className="card row" style={gap}>
       <b style={{ flex: 2 }}>
-        {dest(p.d)?.name} · {p.days}d
+        {dest(p.d)?.name} · {p.days}d {p.departed && <span className="tag cancelled">Departed</span>}
       </b>
+      <label style={{ margin: 0 }}>Departs</label>
+      <input type="date" value={date} onChange={(e) => setDate(e.target.value)} aria-label="Departure date" />
       <label style={{ margin: 0 }}>Price ₱</label>
       <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} style={{ width: "7rem" }} />
       <label style={{ margin: 0 }}>Slots</label>
@@ -173,7 +176,7 @@ function PkgRow({ p }) {
 function Packages() {
   const { db } = useApp();
   // The key makes each row re-read its numbers when a booking changes the slot count.
-  return db.pkgs.map((p) => <PkgRow key={`${p.id}-${p.price}-${p.slots}`} p={p} />);
+  return db.pkgs.map((p) => <PkgRow key={`${p.id}-${p.price}-${p.slots}-${p.date}`} p={p} />);
 }
 
 /* ---------------------------------------------------------------- bookings */

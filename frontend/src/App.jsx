@@ -208,7 +208,8 @@ export default function App() {
   };
 
   /* ---- booking flow ---- */
-  const pick = (id) => {
+    const pick = (id) => {
+    if (pk(id)?.departed) return toast("This departure has already passed, so it can't be booked.");
     setPkgId(id);
     setDraft({ n: 1, name: user.u, phone: "", ok: false });
     go("book");
@@ -216,6 +217,7 @@ export default function App() {
 
   const checkSlots = ({ n, name, phone }) => {
     const p = pk(pkgId);
+    if (p.departed) return go("book", "This departure has already passed, so it can't be booked.");
     const next = { n: Math.max(1, Math.floor(+n) || 1), name: name.trim(), phone: phone.trim(), ok: false };
     if (!next.name) {
       setDraft(next);

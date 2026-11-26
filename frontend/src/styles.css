@@ -525,6 +525,18 @@ nav .brand:hover {
   color: var(--hd);
   font-weight: 600;
 }
+
+/* ---- departed trips ---- */
+.card.past {
+  opacity: 0.7;
+}
+.card.past .pic {
+  filter: grayscale(0.7);
+}
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
 @media (max-width: 520px) {
   .stepper li:not(.current) .step-label {
     display: none;

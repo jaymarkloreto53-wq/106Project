@@ -5,7 +5,6 @@ import { money } from "../data.js";
 import Pic from "./Pic.jsx";
 import Hero from "./Hero.jsx";
 
-const today = () => new Date().toLocaleDateString("en-CA"); // YYYY-MM-DD in the visitor's time zone
 const LIVE = ["pending approval", "approved"];
 
 /* A big clickable summary box. */
@@ -75,14 +74,14 @@ function CustomerHome() {
   const active = bookings.filter((b) => LIVE.includes(b.status));
   const pending = active.filter((b) => b.status === "pending approval").length;
   const next = active
-    .filter((b) => b.departureDate >= today())
+    .filter((b) => !b.departed)
     .sort((a, b) => a.departureDate.localeCompare(b.departureDate))[0];
   const updates = data?.notifications.slice(0, 3) ?? [];
   const pinned = db.dests.filter((d) => typeof d.lat === "number").length;
 
   // Trips that are about to sell out.
   const fillingFast = [...db.pkgs]
-    .filter((p) => p.slots > 0 && p.date >= today())
+    .filter((p) => p.slots > 0 && !p.departed)
     .sort((a, b) => a.slots - b.slots)
     .slice(0, 3);
 

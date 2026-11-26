@@ -7,6 +7,7 @@ import { money } from "../data.js";
 function BookingCard({ b, reload }) {
   const { run, busy, refreshCatalog, toast } = useApp();
   const live = !["cancelled", "rejected"].includes(b.status);
+  const canChange = live && !b.departed; // a trip that has already left can't be changed or cancelled
   const [count, setCount] = useState(String(b.travelers));
   const [stars, setStars] = useState(5);
   const [text, setText] = useState("");
@@ -29,7 +30,12 @@ function BookingCard({ b, reload }) {
       <p>
         {b.departureDate} · {b.travelers} traveler{b.travelers > 1 ? "s" : ""} · {money(b.total)} via {b.method}
       </p>
-      {live && (
+      {live && b.departed && (
+        <p className="mut">
+          <small>This trip has already departed, so it can no longer be changed or cancelled.</small>
+        </p>
+      )}
+      {canChange && (
         <div className="row">
           <label htmlFor={`m${b.ref}`} style={{ margin: 0 }}>
             Travelers
@@ -135,11 +141,7 @@ export default function MyBookings() {
           )}
         </>
       )}
-      <p>
-        <button className="btn alt" onClick={logout}>
-          Log out
-        </button>
-      </p>
+      
     </>
   );
 }

@@ -44,7 +44,9 @@ function buildPopup(d, pkg, onAction, actionLabel) {
   el.append(h, tag, p);
   if (pkg) {
     const info = document.createElement("p");
-    info.textContent = `${pkg.days} days · departs ${pkg.date} · from ${money(pkg.price)}`;
+      info.textContent = pkg.departed
+      ? `Departed ${pkg.date} · no longer available`
+      : `${pkg.days} days · departs ${pkg.date} · from ${money(pkg.price)}`;
     el.append(info);
   }
   if (actionLabel) {
@@ -81,7 +83,9 @@ export default function MapView() {
         .filter((d) => !type || d.type === type)
         .map((d) => {
           const pkgs = db.pkgs.filter((p) => p.d === d.id);
-          const pkg = pkgs.sort((a, b) => a.date.localeCompare(b.date))[0] || null;
+          pkgs.sort((a, b) => a.date.localeCompare(b.date));
+          // Prefer a trip that can still be booked; otherwise show the (departed) one.
+          const pkg = pkgs.find((p) => !p.departed) || pkgs[0] || null;
           return { d, pkg, dist: me ? distanceKm(me, [d.lat, d.lng]) : null };
         })
         .sort((a, b) => (me ? a.dist - b.dist : 0)),
@@ -90,7 +94,7 @@ export default function MapView() {
 
   // What the popup button does depends on who is looking.
   const actionFor = (pkg) => {
-    if (!pkg) return { label: "", run: () => {} };
+    if (!pkg || pkg.departed) return { label: "", run: () => {} };
     if (!user) return { label: "Log in to book", run: () => start("login") };
     if (user.role === "admin") return { label: "", run: () => {} };
     return { label: "Book a trip", run: () => pick(pkg.id) };
@@ -251,7 +255,7 @@ export default function MapView() {
                 <h3>{d.name}</h3>
                 <small>
                   {d.type}
-                  {pkg ? ` · ${pkg.days} days · from ${money(pkg.price)}` : ""}
+                  {pkg ? (pkg.departed ? " · departed" : ` · ${pkg.days} days · from ${money(pkg.price)}`) : ""}
                   {dist != null ? ` · ${km(dist)} away` : ""}
                 </small>
               </button>
@@ -267,11 +271,6 @@ export default function MapView() {
           </a>{" "}
           contributors.
         </small>
-      </p>
-      <p>
-        <button className="btn alt" onClick={() => go(user ? (user.role === "admin" ? "admin" : "browse") : "home")}>
-          {user ? (user.role === "admin" ? "Back to dashboard" : "Back to packages") : "Back home"}
-        </button>
       </p>
     </>
   );
